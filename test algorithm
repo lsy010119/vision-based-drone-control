@@ -1,0 +1,101 @@
+import asyncio
+
+from mavsdk import System
+
+from mavsdk.offboard import (OffboardError, PositionNedYaw)
+
+async def run():
+
+       """ Does Offboard control using position NED coordinates. """
+
+      drone = System()
+
+      await drone.connect(system_address="udp://:14540")
+
+      print("-- Arming")
+
+      await drone.action.arm()
+
+      print("-- Setting initial setpoint")
+
+      await drone.offboard.set_position_ned(PositionNedYaw(0.0, 0.0, 0.0, 0.0))
+
+      print("-- Starting offboard")
+
+      try:
+
+          await drone.offboard.start()
+
+      except OffboardError as error:
+
+          print(f"Starting offboard mode failed with error code: {error._result.result}")
+
+          print("-- Disarming")
+
+          await drone.action.disarm()
+
+          return
+
+      await drone.offboard.set_position_ned(PositionNedYaw(0.0, 0.0, -7.0, 0))
+
+      await asyncio.sleep(10)
+
+      for i in range (0,8):
+
+           await drone.offboard.set_position_ned(PositionNedYaw(0, 1.8-(1.24)*i, -7.0, 0))
+
+           await asyncio.sleep(5)
+
+await asyncio.sleep(8)
+
+for i in range (0,8):
+
+      await drone.offboard.set_position_ned(PositionNedYaw(-6.4, -8.12 + (1.24)*i, -7.0, 0))
+
+      await asyncio.sleep(5)
+
+await asyncio.sleep(8)
+
+for i in range (0,8):
+
+      await drone.offboard.set_position_ned(PositionNedYaw(-12, 1.8 - (1.24)*i, -7.0, 0))
+
+      await asyncio.sleep(5)
+
+await asyncio.sleep(10)
+
+await drone.offboard.set_position_ned(PositionNedYaw(0,0,-7.0, 0))
+
+await asyncio.sleep(8)
+
+print("-- Stopping offboard")
+
+try:
+
+    await drone.offboard.stop()
+
+except OffboardError as error:
+
+    print(f"Stopping offboard mode failed with error code: {error._result.result}")
+
+async def land(self):
+
+    print("========LAND!=======")
+
+    print("--------LAND------------")
+
+    await self.drone.action.land()
+
+    await asyncio.sleep(10)
+
+    print("--------DISARM--------")
+
+    await self.drone.action.disarm()
+
+    await asyncio.sleep(5)
+
+if __name__ == "__main__":
+
+    loop = asyncio.get_event_loop()
+
+    loop.run_until_complete(run())
